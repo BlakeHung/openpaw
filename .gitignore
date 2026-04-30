@@ -1,0 +1,17 @@
+# Environment
+.env
+*.swp
+.DS_Store
+
+# Models (too large for git)
+*.safetensors
+*.ckpt
+*.bin
+*.pt
+
+# ComfyUI outputs
+comfyui/output/
+
+# Training data
+lora/training/images/
+lora/training/output/

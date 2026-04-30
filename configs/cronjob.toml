@@ -1,0 +1,57 @@
+# OpenPaw — 金金排程任務
+# Cronjob hot-reload: 修改此檔案後 OpenAB 會在 1 分鐘內自動載入，不需重啟
+
+# === 每日早安 (08:00 CST) ===
+[[jobs]]
+enabled = true
+schedule = "0 8 * * *"
+channel = ""  # 填入目標頻道 ID
+platform = "discord"
+sender_name = "金金"
+timezone = "Asia/Taipei"
+message = """今天是新的一天！請幫大家：
+1. 查一下今天台北的天氣
+2. 根據天氣給寵物照護提醒（熱天補水、雨天擦腳、冷天保暖）
+3. 找一則今天有趣的寵物相關新聞
+4. 用你的方式跟大家說早安
+記得你是金金，一隻熱情的黃金獵犬～"""
+
+# === 每日晚安 (22:00 CST) ===
+[[jobs]]
+enabled = true
+schedule = "0 22 * * *"
+channel = ""  # 填入目標頻道 ID
+platform = "discord"
+sender_name = "金金"
+timezone = "Asia/Taipei"
+message = """跟大家說晚安吧！
+分享一個寵物照護的小知識或冷知識，
+然後提醒大家和毛孩都要早點休息。
+記得你是金金～"""
+
+# === 週一加油 (09:00 CST) ===
+[[jobs]]
+enabled = true
+schedule = "0 9 * * 1"
+channel = ""  # 填入目標頻道 ID
+platform = "discord"
+sender_name = "金金"
+timezone = "Asia/Taipei"
+message = """今天是星期一！
+幫大家打氣，分享一句跟毛孩有關的暖心語錄。
+你是金金～汪！新的一週加油！"""
+
+# === 週末寵物活動推薦 (週五 18:00 CST) ===
+[[jobs]]
+enabled = true
+schedule = "0 18 * * 5"
+channel = ""  # 填入目標頻道 ID
+platform = "discord"
+sender_name = "金金"
+timezone = "Asia/Taipei"
+message = """週末快到了！
+幫大家查一下這週末台北有沒有：
+1. 寵物展覽或市集
+2. 認養活動
+3. 適合帶毛孩去的戶外景點
+整理給大家參考～汪！"""
