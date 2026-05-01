@@ -1,9 +1,11 @@
 # OpenPaw — 金金 (Jin-Jin) Agent Config
-# 黃金獵犬 AI 助手，寵物照護問答 + 每日推播
+# 黃金獵犬 AI 助手，寵物照護問答 + 每日推播 + 產圖
+# Requires OpenAB v0.8.2-beta.7+
 
 [discord]
 bot_token = "${DISCORD_BOT_TOKEN}"
 allowed_channels = []  # 填入你的頻道 ID
+allow_dm = true        # 允許私訊金金
 
 [gateway]
 url = "ws://openab-gateway:8080/ws"
@@ -12,8 +14,8 @@ platform = "line"
 [agent]
 command = "claude"
 args = ["code", "--trust-all-tools"]
-working_dir = "/home/bklinu/devProject/OpenPaw/agents/jin-jin"
-env = { ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}" }
+working_dir = "/home/bklinu/devProject/openpaw/agents/jin-jin"
+env = { ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}", DISCORD_BOT_TOKEN = "${DISCORD_BOT_TOKEN}", COMFYUI_API_URL = "http://localhost:8188" }
 
 [pool]
 max_sessions = 5
@@ -21,6 +23,7 @@ session_ttl_hours = 24
 
 [reactions]
 enabled = true
+tool_display = "hidden"  # 隱藏 tool call 細節，回覆乾淨
 
 [markdown]
 format = "bullets"

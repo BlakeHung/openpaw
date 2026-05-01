@@ -1,5 +1,9 @@
 # Sending Images from Agent to Chat Platform
 
+> **Note:** OpenAB upstream now has official `docs/sendimages.md` and `docs/sendfiles.md` (PR #652, v0.8.2-beta.7).
+> This file is OpenPaw's extended version with ComfyUI + LoRA integration.
+> For the official Discord-only guide, see [OpenAB sendimages.md](https://github.com/openabdev/openab/blob/main/docs/sendimages.md).
+
 OpenAB is text-only by design — the `ChatAdapter` trait sends `&str`, not binary data.
 This document describes best practices for agents to send images back to users **without modifying OpenAB core**.
 
