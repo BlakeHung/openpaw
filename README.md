@@ -1,156 +1,121 @@
-# 🐾 OpenPaw — My Pet Anywhere
+# OpenPaw — My Pet Anywhere
 
-Pet AI assistant architecture built on [OpenAB](https://github.com/openabdev/openab).
+Pet AI assistant built on [OpenAB](https://github.com/openabdev/openab). Train your pet's face with LoRA, deploy on LINE — your pet greets your family every morning.
 
-**Fork → Config → Deploy** — let your pet brand have its own AI assistant.
+**Fork → Config → Deploy**
+
+![BuBu](https://wchung.tw/recon/images/20260505-openpaw-bubu-cover-4_4bd4ff44-0.png)
 
 ---
 
-## What is OpenPaw
+## What it does
 
-OpenPaw is a vertical application framework on top of OpenAB, designed for the pet industry. It provides:
-
-- **Pet care AI Q&A** — pet owners ask via LINE/Discord, AI searches veterinary resources to answer
-- **Daily push notifications** — weather reminders + pet care tips via cronjob
-- **Multi-platform** — LINE (consumers) + Discord (community) with a single config
+- **LoRA-trained image generation** — AI generates images that look like your actual pet
+- **Daily push** — weather + pet care tips + AI-generated greeting image via cronjob
+- **Multi-platform** — LINE / Discord / Slack / Telegram / Feishu / Google Chat
+- **Emotion-aware** — detects owner's mood, adjusts response
+- **Text overlay** — Chinese text on images (Pillow + Noto Sans CJK)
 - **Brand persona** — change `CLAUDE.md` to switch voice and personality
-- **Brand-specific image generation** — train LoRA on your pet/mascot photos, AI generates on-brand images
 
 ## Architecture
 
 ```
-  Layer 4: Client Layer (per client)
-  ├── LoRA weights (brand-specific image style)
-  ├── CLAUDE.md (persona)
-  ├── config.toml (platform + AI backend)
-  ├── cronjob.toml (scheduled push)
-  └── Knowledge base / FAQ
-
-  Layer 3: Image Engine
-  ├── ComfyUI + Flux.1-schnell
-  ├── Dynamic LoRA loading (per client)
-  └── sendimages protocol (Discord/LINE/Telegram)
-
-  Layer 2: AI Agent Layer
-  ├── Claude Code / Kiro / OpenCode
-  ├── WebSearch + WebFetch
-  └── Session management
-
-  Layer 1: Platform Layer (OpenAB)
-  ├── LINE / Discord / Telegram / Slack
-  ├── CronScheduler (hot-reload)
-  └── K8s / Helm / Docker
+LINE / Discord
+    → Cloudflare Tunnel
+    → Gateway (Rust, axum, HMAC signature verification)
+    → OpenAB Core (Session Pool + Cronjob + Keyword Gating)
+    → Claude Code Agent (pet persona via CLAUDE.md)
+    → ComfyUI + Flux.1 + LoRA (image generation, ~10s)
+    → Pillow (text overlay)
+    → LINE Push API / Discord API
 ```
 
-## Jin-Jin — Reference Implementation
+## BuBu — Reference Implementation
 
-Jin-Jin (金金) is a golden retriever AI assistant, the first OpenPaw pet AI:
+BuBu (咘咘) is a golden retriever, the first OpenPaw pet AI. Running in a real family LINE group:
 
-- Pet health Q&A (diet safety, behavior, daily care)
-- Find nearby vets, pet events
-- Daily greeting (weather + pet care tips)
-- Weekend pet activity recommendations
-- Brand images generated from LoRA trained on real golden retriever photos
+- Checks local weather every morning
+- Generates a greeting image with her face
+- Reminds family to take her for a walk
+- Responds when you call her name
+- Auto-introduces herself when joining a new group
+
+## Quick Start
+
+```bash
+# 1. Clone
+git clone https://github.com/BlakeHung/openpaw.git
+
+# 2. Set up OpenAB
+git clone https://github.com/openabdev/openab.git
+cd openab
+cp ../openpaw/configs/jin-jin-line.toml config.toml
+cp ../openpaw/configs/cronjob.toml cronjob.toml
+
+# 3. Configure
+# Edit config.toml — add LINE token, channel secret
+# Edit CLAUDE.md — define your pet's personality
+# Edit cronjob.toml — set schedule and channel IDs
+
+# 4. Run
+cargo run -- -c config.toml
+```
+
+## Image Generation
+
+```bash
+# Train LoRA (collect 20+ photos of your pet)
+cd lora/training
+./train-lora.sh --images /path/to/pet-photos --output your-pet.safetensors
+
+# Generate + send
+./comfyui/generate-and-send.sh \
+  --prompt "your_pet_trigger, golden retriever in sunny morning" \
+  --platform line \
+  --channel "your-channel-id" \
+  --caption "Good morning!"
+```
+
+## Why OpenAB, not OpenClaw
+
+OpenClaw (60K stars) has had multiple CVEs in 2026 — RCE, privilege escalation, 40K+ exposed instances, 335 malicious Skills.
+
+OpenAB is different by design:
+- Agent has stdio only (ACP protocol), no OS access
+- No marketplace = no supply chain risk
+- Rust = memory safe
+- Config-driven = auditable
 
 ## Directory Structure
 
 ```
 openpaw/
-├── README.md
-├── agents/
-│   └── jin-jin/
-│       └── CLAUDE.md           # Jin-Jin persona
+├── agents/jin-jin/CLAUDE.md    # Pet persona
 ├── configs/
-│   ├── jin-jin.toml            # Agent config
-│   └── cronjob.toml            # Scheduled tasks
+│   ├── jin-jin-line.toml       # LINE config
+│   └── cronjob.toml            # Schedule
 ├── comfyui/
-│   └── workflows/
-│       └── flux-lora-generate.json  # Image generation workflow
-├── lora/
-│   └── training/
-│       └── train-lora.sh       # LoRA training script
+│   ├── generate-and-send.sh    # Image pipeline
+│   ├── overlay-text.py         # Chinese text overlay
+│   └── workflows/              # ComfyUI workflow
+├── lora/training/              # LoRA training
 └── docs/
-    └── sendimages.md           # Image delivery best practices
+    ├── reboot-guide.md         # Server restart guide
+    └── sendimages.md           # Image delivery protocol
 ```
 
-## Quick Start
+## Cost
 
-### Prerequisites
-
-- [OpenAB](https://github.com/openabdev/openab) cloned and built
-- Claude Code (or other ACP-compatible CLI)
-- GPU with 12GB+ VRAM (for image generation)
-- ComfyUI (for Flux.1 + LoRA)
-
-### 1. Clone
-
-```bash
-git clone https://github.com/BlakeHung/openpaw.git
-```
-
-### 2. Set up OpenAB
-
-```bash
-git clone https://github.com/openabdev/openab.git
-cd openab
-# Copy OpenPaw configs
-cp ../openpaw/configs/jin-jin.toml config.toml
-cp ../openpaw/configs/cronjob.toml cronjob.toml
-# Set up agent working directory
-ln -s ../openpaw/agents/jin-jin agents/jin-jin
-```
-
-### 3. Configure
-
-Edit `config.toml`:
-```toml
-[discord]
-bot_token = "${DISCORD_BOT_TOKEN}"
-allowed_channels = ["your-channel-id"]
-
-[agent]
-working_dir = "/path/to/openpaw/agents/jin-jin"
-```
-
-Edit `cronjob.toml` — fill in channel IDs.
-
-### 4. Run
-
-```bash
-cargo run -- --config config.toml
-```
-
-## Image Generation
-
-OpenPaw uses **LoRA-trained Flux.1** to generate brand-specific pet images.
-
-### Train LoRA
-
-```bash
-# Collect 15-20 photos of your pet/mascot
-# Run training script
-cd lora/training
-./train-lora.sh --images /path/to/pet-photos --output bubu-golden.safetensors
-```
-
-### Generate Images
-
-Images are generated via ComfyUI API and delivered using the [sendimages](docs/sendimages.md) protocol — no OpenAB core modification needed.
-
-## Customize for Your Brand
-
-1. Copy `agents/jin-jin/` → `agents/your-pet/`
-2. Edit `CLAUDE.md` — change brand name, voice, expertise
-3. Copy `configs/jin-jin.toml` → `configs/your-pet.toml`
-4. Train LoRA with your brand's pet/mascot photos
-5. Done — each new client takes 1-2 days to deploy
+~$115/month (Claude Max $100 + GPU electricity ~$15)
 
 ## Links
 
-- **Landing page**: [wchung.tw/OpenPaw](https://wchung.tw/OpenPaw/)
+- **Blog**: [wchung.tw/blog/openpaw-ai-pet-on-line](https://wchung.tw/blog/openpaw-ai-pet-on-line/)
+- **Landing**: [wchung.tw/OpenPaw](https://wchung.tw/OpenPaw/)
 - **OpenAB**: [github.com/openabdev/openab](https://github.com/openabdev/openab)
+- **OpenAB Discord**: [discord.gg/DmbhfDZjQS](https://discord.gg/DmbhfDZjQS)
 - **Author**: Blake Hung — blake@wchung.tw
 
 ## Credits
 
-Photo reference: 小金毛 咘咘BuBu [@goldenbubu0504](https://www.threads.com/@goldenbubu0504) (authorized)
+BuBu (咘咘) — [@goldenbubuisme](https://www.instagram.com/goldenbubuisme) · [@goldenbubu0504](https://www.threads.com/@goldenbubu0504)
